@@ -1,0 +1,7 @@
+checkpoint:
+  dirpath: ${paths.output_dir}/lightning_checkpoints
+  every_n_train_steps: ${train.save_steps}
+  save_last: true
+  save_top_k: -1
+  filename: step-{step}
+  save_weights_only: false

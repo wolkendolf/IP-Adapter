@@ -1,0 +1,9 @@
+accelerator: gpu
+devices: 1
+strategy: auto
+
+precision: ${precision.trainer_precision}
+max_epochs: ${train.num_train_epochs}
+accumulate_grad_batches: ${train.accumulate_grad_batches}
+log_every_n_steps: ${train.log_every_n_steps}
+enable_checkpointing: true

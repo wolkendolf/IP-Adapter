@@ -1,0 +1,75 @@
+# data + preprocessing
+json_file: data/processed/coyo_original/data_filtered.json
+root_path: data/processed/coyo_original/images
+
+resolution: 512
+train_batch_size: 8
+num_workers: 8
+
+build:
+  enabled: true
+
+  # финальные артефакты для обучения
+  final_root: data/processed/coyo_original
+  out_images: ${data.build.final_root}/images
+  out_jsonl: ${data.build.final_root}/data.jsonl
+  out_json: ${data.build.final_root}/data.json
+  out_json_filtered: ${data.build.final_root}/data_filtered.json
+  bad_report: ${data.build.final_root}/bad_samples.jsonl
+
+  # параметры фильтрации
+  min_size: 16
+  max_aspect: 20
+
+  # вход: WDS
+  wds_dir: data/processed/coyo-700m-webdataset
+  num_shards: 10  # 00000..00019
+
+  # DVC: тянем/кладём финальные данные (coyo_original)
+  dvc:
+    try_pull_first: true
+    remote_name: data
+    jobs: 1
+
+# COYO download/build pipeline
+coyo:
+  enabled: true
+
+  # where to put raw parquet parts downloaded from HF
+  raw_dir: data/raw/coyo-700m
+
+  # where to put processed webdataset shards
+  processed_dir: data/processed/coyo-700m-webdataset
+
+  # download parquet parts: inclusive range [start, end]
+  parquet_parts:
+    start: 0
+    end: 5
+
+  # want exactly NUM_SHARDS tar files: 00000.tar..00019.tar
+  num_shards: 20
+  samples_per_shard: 10000
+
+  img2dataset:
+    image_size: 384
+    processes_count: 16
+    thread_count: 64
+    resize_only_if_bigger: true
+    resize_mode: keep_ratio
+    skip_reencode: true
+    enable_wandb: false
+    additional_columns:
+      - clip_similarity_vitb32
+      - clip_similarity_vitl14
+      - nsfw_score_opennsfw2
+      - nsfw_score_gantman
+      - watermark_score
+      - aesthetic_score_laion_v2
+
+  dvc:
+    try_pull_first: true
+    remote_name: data
+    jobs: 1
+
+  # HF URL template (UUID suffix can change)
+  hf_url_template: "https://huggingface.co/datasets/kakaobrain/coyo-700m/resolve/main/data/part-{part:05d}-17da4908-939c-46e5-91d0-15f256041956-c000.snappy.parquet"

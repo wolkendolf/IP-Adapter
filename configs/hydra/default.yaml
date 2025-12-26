@@ -1,0 +1,4 @@
+job:
+  chdir: false
+run:
+  dir: ${paths.output_dir}/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}

@@ -1,0 +1,7 @@
+learning_rate: 1e-4
+weight_decay: 1e-2
+num_train_epochs: 1
+
+save_steps: 1000
+accumulate_grad_batches: 1
+log_every_n_steps: 10

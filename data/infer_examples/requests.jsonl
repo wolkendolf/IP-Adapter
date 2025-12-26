@@ -1,0 +1,2 @@
+{"id":"woman","image":"data/infer_examples/images/woman.png","prompt":"portrait photo, cinematic lighting","negative_prompt":"low quality, bad anatomy","seed":42,"num_samples":4,"guidance_scale":7.5,"num_inference_steps":30,"scale":1.0}
+{"id":"car","image":"data/infer_examples/images/car.jpg","prompt":"a red sports car on the street, ultra realistic","seed":123}

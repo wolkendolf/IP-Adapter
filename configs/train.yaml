@@ -1,0 +1,20 @@
+defaults:
+  - data: ip_adapter
+  - model: ip_adapter
+  - train: default
+  - trainer: default
+  - precision: bf16
+  - callbacks: default
+  - hydra: default
+  - _self_
+
+seed: 42
+
+paths:
+  output_dir: sd-ip_adapter
+  plots_dir: plots   # <-- ВАЖНО: всё логирование/графики сюда 
+
+mlflow:
+  tracking_uri: "http://127.0.0.1:8080"
+  experiment_name: "ipadapter_coyo"
+  run_name: "${now:%Y%m%d-%H%M%S}"

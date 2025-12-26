@@ -1,0 +1,4 @@
+[core]
+    remote = data
+['remote "data"']
+    url = /home/jovyan/shares/SR008.fs2/nkiselev/sandbox/kazachkovdi/ipad_mlops_dvc_remote/data

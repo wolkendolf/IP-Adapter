@@ -1,0 +1,6 @@
+outs:
+- md5: 2bf7f8f01696f27dd82a6cc95224cdcd.dir
+  size: 961334838
+  nfiles: 20662
+  hash: md5
+  path: coyo_original
