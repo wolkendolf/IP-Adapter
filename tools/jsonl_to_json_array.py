@@ -1,6 +1,9 @@
 from __future__ import annotations
-import json, argparse
+
+import argparse
+import json
 from pathlib import Path
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -16,6 +19,7 @@ def main():
     out = Path(args.out_json)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
 
 if __name__ == "__main__":
     main()

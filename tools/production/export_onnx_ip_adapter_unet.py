@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from pathlib import Path
-import fire
 import argparse
 import importlib.util
 import json
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
+import fire
 import torch
 
 from tutorial_train import IPAdapterLitModule
@@ -44,7 +45,9 @@ def export_onnx(
     lightning_ckpt = Path(lightning_ckpt)
     out_onnx = Path(out_onnx)
     # Load Lightning module (it will reconstruct from saved hparams)
-    lit = IPAdapterLitModule.load_from_checkpoint(str(lightning_ckpt), map_location="cpu")
+    lit = IPAdapterLitModule.load_from_checkpoint(
+        str(lightning_ckpt), map_location="cpu"
+    )
     lit.eval()
 
     # Move to device
@@ -52,10 +55,14 @@ def export_onnx(
     lit.to(dev)
 
     # Build ONNX export model (single diffusion step)
-    model = IPAdapterUnetStepForOnnx(
-        unet=lit.unet,
-        image_proj_model=lit.image_proj_model,
-    ).eval().to(dev)
+    model = (
+        IPAdapterUnetStepForOnnx(
+            unet=lit.unet,
+            image_proj_model=lit.image_proj_model,
+        )
+        .eval()
+        .to(dev)
+    )
 
     # 4) Determine dims from loaded components
     # SD latents spatial = resolution / 8
@@ -71,9 +78,13 @@ def export_onnx(
     img_embed_dim = int(getattr(lit.image_encoder.config, "projection_dim", 1024))
 
     # Dummy inputs
-    noisy_latents = torch.randn(batch, latent_c, latent_h, latent_w, device=dev, dtype=torch.float32)
+    noisy_latents = torch.randn(
+        batch, latent_c, latent_h, latent_w, device=dev, dtype=torch.float32
+    )
     timesteps = torch.randint(0, 1000, (batch,), device=dev, dtype=torch.long)
-    encoder_hidden_states = torch.randn(batch, max_len, text_hidden, device=dev, dtype=torch.float32)
+    encoder_hidden_states = torch.randn(
+        batch, max_len, text_hidden, device=dev, dtype=torch.float32
+    )
     image_embeds = torch.randn(batch, img_embed_dim, device=dev, dtype=torch.float32)
 
     # Export
@@ -86,7 +97,12 @@ def export_onnx(
         opset_version=opset,
         export_params=True,
         do_constant_folding=True,
-        input_names=["noisy_latents", "timesteps", "encoder_hidden_states", "image_embeds"],
+        input_names=[
+            "noisy_latents",
+            "timesteps",
+            "encoder_hidden_states",
+            "image_embeds",
+        ],
         output_names=["noise_pred"],
         dynamic_axes={
             "noisy_latents": {0: "batch", 2: "latent_h", 3: "latent_w"},

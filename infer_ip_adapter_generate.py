@@ -6,9 +6,8 @@ from typing import Any
 
 import fire
 import torch
+from diffusers import AutoencoderKL, DDIMScheduler, StableDiffusionPipeline
 from PIL import Image
-
-from diffusers import StableDiffusionPipeline, DDIMScheduler, AutoencoderKL
 
 from ip_adapter.ip_adapter import IPAdapter
 
@@ -141,18 +140,22 @@ def run(
             raise ValueError(f"requests_jsonl is empty: {requests_jsonl}")
     else:
         if image is None or prompt is None:
-            raise ValueError("Provide either --requests_jsonl or both --image and --prompt")
-        reqs = [{
-            "id": "single",
-            "image": image,
-            "prompt": prompt,
-            "negative_prompt": negative_prompt,
-            "num_samples": num_samples,
-            "seed": seed,
-            "guidance_scale": guidance_scale,
-            "num_inference_steps": num_inference_steps,
-            "scale": scale,
-        }]
+            raise ValueError(
+                "Provide either --requests_jsonl or both --image and --prompt"
+            )
+        reqs = [
+            {
+                "id": "single",
+                "image": image,
+                "prompt": prompt,
+                "negative_prompt": negative_prompt,
+                "num_samples": num_samples,
+                "seed": seed,
+                "guidance_scale": guidance_scale,
+                "num_inference_steps": num_inference_steps,
+                "scale": scale,
+            }
+        ]
 
     manifest_path = out_dir_p / "manifest.jsonl"
     with manifest_path.open("w", encoding="utf-8") as mf:
@@ -165,7 +168,10 @@ def run(
             prefix = _safe_stem(rid)
 
             r_prompt = r.get("prompt", prompt) or "best quality, high quality"
-            r_neg = r.get("negative_prompt", negative_prompt) or "monochrome, lowres, bad anatomy, worst quality, low quality"
+            r_neg = (
+                r.get("negative_prompt", negative_prompt)
+                or "monochrome, lowres, bad anatomy, worst quality, low quality"
+            )
 
             r_num_samples = int(r.get("num_samples", num_samples))
             r_seed = r.get("seed", seed)

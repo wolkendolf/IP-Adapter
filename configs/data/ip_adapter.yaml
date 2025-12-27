@@ -23,7 +23,7 @@ build:
 
   # вход: WDS
   wds_dir: data/processed/coyo-700m-webdataset
-  num_shards: 10  # 00000..00019
+  num_shards: 10 # 00000..00019
 
   # DVC: тянем/кладём финальные данные (coyo_original)
   dvc:

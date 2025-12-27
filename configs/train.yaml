@@ -12,7 +12,7 @@ seed: 42
 
 paths:
   output_dir: sd-ip_adapter
-  plots_dir: plots   # <-- ВАЖНО: всё логирование/графики сюда 
+  plots_dir: plots # <-- ВАЖНО: всё логирование/графики сюда
 
 mlflow:
   tracking_uri: "http://127.0.0.1:8080"

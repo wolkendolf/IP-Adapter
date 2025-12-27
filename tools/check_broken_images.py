@@ -38,14 +38,22 @@ def check_image(
 
             aspect = max(w, h) / max(1, min(w, h))
             if aspect > max_aspect:
-                return False, "aspect_too_large", {"w": w, "h": h, "aspect": aspect, "mode": mode}
+                return (
+                    False,
+                    "aspect_too_large",
+                    {"w": w, "h": h, "aspect": aspect, "mode": mode},
+                )
 
             # Force a lightweight conversion check (catches some weird edge cases).
             # This may decode a bit, but helps prevent later failures.
             try:
                 _ = im.convert("RGB")
             except Exception as e:  # noqa: BLE001
-                return False, "rgb_convert_failed", {"w": w, "h": h, "mode": mode, "err": str(e)}
+                return (
+                    False,
+                    "rgb_convert_failed",
+                    {"w": w, "h": h, "mode": mode, "err": str(e)},
+                )
 
             return True, "", {"w": w, "h": h, "mode": mode}
 
@@ -63,9 +71,24 @@ def main() -> None:
         default="",
         help="Optional JSONL path to write bad samples with reasons (empty disables)",
     )
-    ap.add_argument("--min_size", type=int, default=16, help="Minimum min(w,h) to keep (default: 16)")
-    ap.add_argument("--max_aspect", type=float, default=20.0, help="Maximum aspect ratio max/min (default: 20.0)")
-    ap.add_argument("--limit", type=int, default=0, help="Optional limit of samples to scan (0 = all)")
+    ap.add_argument(
+        "--min_size",
+        type=int,
+        default=16,
+        help="Minimum min(w,h) to keep (default: 16)",
+    )
+    ap.add_argument(
+        "--max_aspect",
+        type=float,
+        default=20.0,
+        help="Maximum aspect ratio max/min (default: 20.0)",
+    )
+    ap.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Optional limit of samples to scan (0 = all)",
+    )
     args = ap.parse_args()
 
     in_json = Path(args.in_json)
@@ -92,7 +115,13 @@ def main() -> None:
         if not image_file:
             bad += 1
             if bad_fh:
-                bad_fh.write(json.dumps({"reason": "missing_image_file_field", "record": rec}, ensure_ascii=False) + "\n")
+                bad_fh.write(
+                    json.dumps(
+                        {"reason": "missing_image_file_field", "record": rec},
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
             continue
 
         img_path = image_root / str(image_file)

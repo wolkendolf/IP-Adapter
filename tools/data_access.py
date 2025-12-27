@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
-import json
 import sys
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -23,11 +23,13 @@ def _project_root() -> Path:
     except Exception:
         return Path.cwd()
 
+
 def _resolve(p: str | Path) -> Path:
     p = Path(p)
     if p.is_absolute():
         return p
     return _project_root() / p
+
 
 def _as_rel_under_root(p: Path) -> str:
     root = _project_root().resolve()
@@ -43,9 +45,11 @@ def _as_rel_under_root(p: Path) -> str:
 def _run(cmd: list[str], *, cwd: Path | None = None) -> None:
     subprocess.run(cmd, cwd=str(cwd) if cwd else None, check=True)
 
+
 def _require_exe(name: str) -> None:
     if shutil.which(name) is None:
         raise RuntimeError(f"Executable '{name}' not found in PATH.")
+
 
 def _find_tool_script(filename: str) -> Path:
     """
@@ -76,6 +80,7 @@ def _dir_nonempty(d: Path) -> bool:
     except StopIteration:
         return False
 
+
 def _final_dataset_ready(cfg: DictConfig) -> bool:
     """
     Checks that training dataset (cfg.data.json_file + cfg.data.root_path) exists.
@@ -84,12 +89,14 @@ def _final_dataset_ready(cfg: DictConfig) -> bool:
     root_path = _resolve(cfg.data.root_path)
     return json_file.exists() and root_path.exists() and _dir_nonempty(root_path)
 
+
 def _have_required_shards(processed_dir: Path, num_shards: int) -> bool:
     # require exactly the range [00000, ..., 000{num_shards-1}]
     for i in range(num_shards):
         if not (processed_dir / f"{i:05d}.tar").exists():
             return False
     return True
+
 
 # DVC helpers (best-effort)
 def _try_dvc_pull(processed_dir: Path, remote: str, jobs: int) -> bool:
@@ -101,11 +108,13 @@ def _try_dvc_pull(processed_dir: Path, remote: str, jobs: int) -> bool:
     except subprocess.CalledProcessError:
         return False
 
+
 # COYO WDS build: HF parquet -> subset parquet -> img2dataset (webdataset shards)
 def _iter_parts(start: int, end: int) -> Sequence[int]:
     if end < start:
         raise ValueError(f"parquet_parts.end ({end}) < start ({start})")
     return list(range(start, end + 1))
+
 
 # Step 1: Download parquet parts from HF (via wget)
 def download_coyo_parquets(cfg: DictConfig) -> list[Path]:
@@ -117,7 +126,9 @@ def download_coyo_parquets(cfg: DictConfig) -> list[Path]:
     raw_dir = _resolve(cfg.data.coyo.raw_dir)
     raw_dir.mkdir(parents=True, exist_ok=True)
 
-    parts = _iter_parts(int(cfg.data.coyo.parquet_parts.start), int(cfg.data.coyo.parquet_parts.end))
+    parts = _iter_parts(
+        int(cfg.data.coyo.parquet_parts.start), int(cfg.data.coyo.parquet_parts.end)
+    )
     tpl = str(cfg.data.coyo.hf_url_template)
 
     out: list[Path] = []
@@ -200,21 +211,36 @@ def run_img2dataset(cfg: DictConfig, subset_parquet: Path) -> None:
 
     cmd = [
         "img2dataset",
-        "--url_list", str(subset_parquet),
-        "--input_format", "parquet",
-        "--url_col", "url",
-        "--caption_col", "text",
-        "--output_format", "webdataset",
-        "--output_folder", str(wds_dir),
-        "--number_sample_per_shard", str(int(cfg.data.coyo.samples_per_shard)),
-        "--processes_count", str(int(cfg.data.coyo.img2dataset.processes_count)),
-        "--thread_count", str(int(cfg.data.coyo.img2dataset.thread_count)),
-        "--image_size", str(int(cfg.data.coyo.img2dataset.image_size)),
-        "--resize_only_if_bigger", "True" if bool(cfg.data.coyo.img2dataset.resize_only_if_bigger) else "False",
-        "--resize_mode", str(cfg.data.coyo.img2dataset.resize_mode),
-        "--skip_reencode", "True" if bool(cfg.data.coyo.img2dataset.skip_reencode) else "False",
-        "--save_additional_columns", add_cols_json,
-        "--enable_wandb", "True" if bool(cfg.data.coyo.img2dataset.enable_wandb) else "False",
+        "--url_list",
+        str(subset_parquet),
+        "--input_format",
+        "parquet",
+        "--url_col",
+        "url",
+        "--caption_col",
+        "text",
+        "--output_format",
+        "webdataset",
+        "--output_folder",
+        str(wds_dir),
+        "--number_sample_per_shard",
+        str(int(cfg.data.coyo.samples_per_shard)),
+        "--processes_count",
+        str(int(cfg.data.coyo.img2dataset.processes_count)),
+        "--thread_count",
+        str(int(cfg.data.coyo.img2dataset.thread_count)),
+        "--image_size",
+        str(int(cfg.data.coyo.img2dataset.image_size)),
+        "--resize_only_if_bigger",
+        "True" if bool(cfg.data.coyo.img2dataset.resize_only_if_bigger) else "False",
+        "--resize_mode",
+        str(cfg.data.coyo.img2dataset.resize_mode),
+        "--skip_reencode",
+        "True" if bool(cfg.data.coyo.img2dataset.skip_reencode) else "False",
+        "--save_additional_columns",
+        add_cols_json,
+        "--enable_wandb",
+        "True" if bool(cfg.data.coyo.img2dataset.enable_wandb) else "False",
     ]
     _run(cmd)
 
@@ -228,7 +254,9 @@ def ensure_wds_shards(cfg: DictConfig) -> None:
       - else build from open sources (HF parquet + img2dataset)
     """
     if not bool(cfg.data.coyo.enabled):
-        raise RuntimeError("cfg.data.coyo.enabled=false, but WDS shards are required to build final dataset.")
+        raise RuntimeError(
+            "cfg.data.coyo.enabled=false, but WDS shards are required to build final dataset."
+        )
 
     wds_dir = _resolve(cfg.data.coyo.processed_dir)
     num_shards = int(cfg.data.coyo.num_shards)
@@ -241,7 +269,11 @@ def ensure_wds_shards(cfg: DictConfig) -> None:
     # Build from open sources
     parquet_files = download_coyo_parquets(cfg)
 
-    subset_parquet = _resolve(cfg.data.coyo.raw_dir).parent / "coyo-700m_subset" / "part_subset.parquet"
+    subset_parquet = (
+        _resolve(cfg.data.coyo.raw_dir).parent
+        / "coyo-700m_subset"
+        / "part_subset.parquet"
+    )
     columns = ["url", "text"] + list(cfg.data.coyo.img2dataset.additional_columns)
 
     make_subset_parquet(
@@ -256,8 +288,10 @@ def ensure_wds_shards(cfg: DictConfig) -> None:
     if not _have_required_shards(wds_dir, num_shards):
         raise RuntimeError("Failed to create required WDS shards.")
 
+
 def _file_nonempty(p: Path) -> bool:
     return p.exists() and p.is_file() and p.stat().st_size > 0
+
 
 # Final build: WDS -> coyo_original (images + json) -> filter bad samples
 def build_coyo_original_from_wds(cfg: DictConfig) -> None:
@@ -285,7 +319,7 @@ def build_coyo_original_from_wds(cfg: DictConfig) -> None:
 
     images_ready = _dir_nonempty(out_images)
 
-    if not images_ready: 
+    if not images_ready:
         # Remove stale outputs (safe)
         for p in [out_jsonl, out_json, out_json_filtered]:
             if p.exists():
@@ -297,14 +331,18 @@ def build_coyo_original_from_wds(cfg: DictConfig) -> None:
             [
                 sys.executable,
                 str(script_coyo),
-                "--wds_dir", str(wds_dir),
-                "--out_images", str(out_images),
-                "--out_jsonl", str(out_jsonl),
-                "--max_samples", "0",
+                "--wds_dir",
+                str(wds_dir),
+                "--out_images",
+                str(out_images),
+                "--out_jsonl",
+                str(out_jsonl),
+                "--max_samples",
+                "0",
             ]
         )
         images_ready = _dir_nonempty(out_images)
-        
+
         if not images_ready or not _file_nonempty(out_jsonl):
             raise RuntimeError(
                 "WDS -> coyo_original step finished, but outputs look empty. "
@@ -313,7 +351,8 @@ def build_coyo_original_from_wds(cfg: DictConfig) -> None:
     else:
         if not _file_nonempty(out_jsonl):
             raise RuntimeError(
-                "Found non-empty out_images, but out_jsonl is missing/empty. ")
+                "Found non-empty out_images, but out_jsonl is missing/empty. "
+            )
 
     # 2) jsonl -> json array
     if not _file_nonempty(out_json):
@@ -322,13 +361,16 @@ def build_coyo_original_from_wds(cfg: DictConfig) -> None:
             [
                 sys.executable,
                 str(script_jsonl),
-                "--in_jsonl", str(out_jsonl),
-                "--out_json", str(out_json),
+                "--in_jsonl",
+                str(out_jsonl),
+                "--out_json",
+                str(out_json),
             ]
         )
         if not _file_nonempty(out_json):
-            raise RuntimeError("jsonl_to_json_array finished, but out_json is missing/empty.")
-
+            raise RuntimeError(
+                "jsonl_to_json_array finished, but out_json is missing/empty."
+            )
 
     # 3) filter broken samples -> data_filtered.json (+ report)
     if not _file_nonempty(out_json_filtered):
@@ -337,16 +379,24 @@ def build_coyo_original_from_wds(cfg: DictConfig) -> None:
             [
                 sys.executable,
                 str(script_check),
-                "--in_json", str(out_json),
-                "--image_root", str(out_images),
-                "--out_json", str(out_json_filtered),
-                "--bad_report", str(bad_report),
-                "--min_size", str(min_size),
-                "--max_aspect", str(max_aspect),
+                "--in_json",
+                str(out_json),
+                "--image_root",
+                str(out_images),
+                "--out_json",
+                str(out_json_filtered),
+                "--bad_report",
+                str(bad_report),
+                "--min_size",
+                str(min_size),
+                "--max_aspect",
+                str(max_aspect),
             ]
         )
         if not _file_nonempty(out_json_filtered):
-            raise RuntimeError("check_data finished, but out_json_filtered is missing/empty.")
+            raise RuntimeError(
+                "check_data finished, but out_json_filtered is missing/empty."
+            )
 
 
 def download_data(cfg: DictConfig) -> None:
@@ -360,6 +410,7 @@ def download_data(cfg: DictConfig) -> None:
     """
     ensure_wds_shards(cfg)
     build_coyo_original_from_wds(cfg)
+
 
 def ensure_training_data(cfg: DictConfig) -> None:
     """

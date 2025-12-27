@@ -1,9 +1,9 @@
-from pathlib import Path
 import argparse
-import torch
+from pathlib import Path
 
 import fire
-from pathlib import Path
+import torch
+
 from tutorial_train import IPAdapterLitModule
 
 

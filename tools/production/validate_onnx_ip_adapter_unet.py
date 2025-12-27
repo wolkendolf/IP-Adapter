@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
 import argparse
 import importlib.util
+from pathlib import Path
+
 import fire
 import numpy as np
 import torch
@@ -32,7 +33,9 @@ def validate(
     try:
         import onnxruntime as ort
     except Exception as e:
-        raise RuntimeError('onnxruntime is not installed. Install: uv add onnxruntime') from e
+        raise RuntimeError(
+            "onnxruntime is not installed. Install: uv add onnxruntime"
+        ) from e
     ckpt = Path(ckpt)
     onnx_path = Path(onnx_path)
 
@@ -51,13 +54,21 @@ def validate(
     max_len = int(getattr(lit.tokenizer, "model_max_length", 77))
     img_embed_dim = int(getattr(lit.image_encoder.config, "projection_dim", 1024))
 
-    noisy_latents = torch.randn(batch, latent_c, latent_h, latent_w, device=dev, dtype=torch.float32)
+    noisy_latents = torch.randn(
+        batch, latent_c, latent_h, latent_w, device=dev, dtype=torch.float32
+    )
     timesteps = torch.randint(0, 1000, (batch,), device=dev, dtype=torch.long)
-    encoder_hidden_states = torch.randn(batch, max_len, text_hidden, device=dev, dtype=torch.float32)
+    encoder_hidden_states = torch.randn(
+        batch, max_len, text_hidden, device=dev, dtype=torch.float32
+    )
     image_embeds = torch.randn(batch, img_embed_dim, device=dev, dtype=torch.float32)
 
     with torch.no_grad():
-        y_pt = model(noisy_latents, timesteps, encoder_hidden_states, image_embeds).cpu().numpy()
+        y_pt = (
+            model(noisy_latents, timesteps, encoder_hidden_states, image_embeds)
+            .cpu()
+            .numpy()
+        )
 
     sess = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
     y_onnx = sess.run(
