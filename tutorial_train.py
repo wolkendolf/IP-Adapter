@@ -589,8 +589,7 @@ class MetricsPlotCallback(Callback):
 @hydra.main(version_base=None, config_path="configs", config_name="train")
 def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
-    # UNCOMMENT
-    # ensure_training_data(cfg)
+    ensure_training_data(cfg)
 
     L.seed_everything(int(cfg.seed), workers=True)
 
